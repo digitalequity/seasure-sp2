@@ -1,0 +1,239 @@
+      {/* Billing Cycle Toggle */}
+      <div className="flex justify-center mb-8">
+        <div className="bg-gray-100 p-1 rounded-lg">
+          <button
+            onClick={() => setBillingCycle('monthly')}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${
+              billingCycle === 'monthly'
+                ? 'bg-white text-gray-900 shadow'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingCycle('yearly')}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${
+              billingCycle === 'yearly'
+                ? 'bg-white text-gray-900 shadow'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Yearly (Save 20%)
+          </button>
+        </div>
+      </div>
+
+      {/* Plans */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {plans.map((plan) => {
+          const price = billingCycle === 'yearly' ? plan.price * 12 * 0.8 : plan.price;
+          const isCurrentPlan = plan.id === serviceProvider?.subscription.plan;
+          const isSelected = plan.id === selectedPlan;
+
+          return (
+            <div
+              key={plan.id}
+              className={`relative rounded-lg shadow-md bg-white p-6 ${
+                isSelected ? 'ring-2 ring-blue-500' : ''
+              } ${plan.recommended ? 'ring-2 ring-blue-300' : ''}`}
+            >
+              {plan.recommended && (
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    Recommended
+                  </span>
+                </div>
+              )}
+
+              <div className="text-center">
+                <h3 className="text-xl font-semibold text-gray-900">{plan.name}</h3>
+                <p className="mt-4">
+                  <span className="text-4xl font-bold text-gray-900">
+                    ${billingCycle === 'yearly' ? Math.round(price / 12) : price}
+                  </span>
+                  <span className="text-gray-500">/month</span>
+                </p>
+                {billingCycle === 'yearly' && (
+                  <p className="text-sm text-green-600">
+                    ${Math.round(price)} billed annually
+                  </p>
+                )}
+                <p className="mt-2 text-sm text-gray-500">
+                  {plan.boatLimit === -1 ? 'Unlimited' : `Up to ${plan.boatLimit}`} boats
+                </p>
+              </div>
+
+              <ul className="mt-6 space-y-3">
+                {plan.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start">
+                    <CheckIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    <span className="ml-2 text-sm text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-6">
+                {isCurrentPlan ? (
+                  <button
+                    disabled
+                    className="w-full px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-md cursor-not-allowed"
+                  >
+                    Current Plan
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setSelectedPlan(plan.id);
+                      setShowConfirmModal(true);
+                    }}
+                    className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                  >
+                    {isSelected ? 'Selected' : 'Select Plan'}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Payment Method */}
+      <div className="mt-8 bg-white shadow rounded-lg p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Payment Method</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="h-8 w-12 rounded bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
+              VISA
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-900">•••• •••• •••• 4242</p>
+              <p className="text-sm text-gray-500">Expires 12/24</p>
+            </div>
+          </div>
+          <button className="text-sm text-blue-600 hover:text-blue-900">
+            Update
+          </button>
+        </div>
+      </div>
+
+      {/* Billing History */}
+      <div className="mt-8 bg-white shadow rounded-lg p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Billing History</h2>
+        <div className="overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead>
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Invoice
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              <tr>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDate(new Date('2024-02-01'))}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  Professional Plan - Monthly
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {formatCurrency(99)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Paid
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 hover:text-blue-900">
+                  <a href="#">Download</a>
+                </td>
+              </tr>
+              <tr>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDate(new Date('2024-01-01'))}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  Professional Plan - Monthly
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {formatCurrency(99)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Paid
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 hover:text-blue-900">
+                  <a href="#">Download</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Confirm Plan Change
+                </h3>
+                <div className="mt-4">
+                  <p className="text-sm text-gray-500">
+                    You are changing from {currentPlan?.name} to {selectedPlanDetails?.name} plan.
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    New price: {formatCurrency(
+                      billingCycle === 'yearly'
+                        ? (selectedPlanDetails?.price || 0) * 12 * 0.8
+                        : selectedPlanDetails?.price || 0
+                    )}/{billingCycle}
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    This change will take effect immediately and you'll be charged a prorated amount.
+                  </p>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={handlePlanChange}
+                  disabled={isProcessing}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                >
+                  {isProcessing ? 'Processing...' : 'Confirm Change'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(false)}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

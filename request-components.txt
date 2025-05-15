@@ -1,0 +1,324 @@
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+              Title
+            </label>
+            <input
+              type="text"
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+              Description
+            </label>
+            <textarea
+              id="description"
+              rows={4}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              required
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div>
+              <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700">
+                Scheduled Date
+              </label>
+              <input
+                type="datetime-local"
+                id="scheduledDate"
+                value={formData.scheduledDate}
+                onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="estimatedHours" className="block text-sm font-medium text-gray-700">
+                Estimated Hours
+              </label>
+              <input
+                type="number"
+                id="estimatedHours"
+                step="0.5"
+                value={formData.estimatedHours}
+                onChange={(e) => setFormData({ ...formData, estimatedHours: e.target.value })}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="estimatedCost" className="block text-sm font-medium text-gray-700">
+                Estimated Cost
+              </label>
+              <input
+                type="number"
+                id="estimatedCost"
+                step="0.01"
+                value={formData.estimatedCost}
+                onChange={(e) => setFormData({ ...formData, estimatedCost: e.target.value })}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => navigate('/requests')}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+          >
+            {isLoading ? <LoadingSpinner /> : mode === 'create' ? 'Create Request' : 'Update Request'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+// src/components/requests/RequestFilters.tsx
+
+import React from 'react';
+import { ServiceRequest, RequestStatus, Priority } from '../../types';
+import { REQUEST_STATUSES, PRIORITY_LEVELS, SERVICE_TYPES } from '../../utils/constants';
+
+interface RequestFiltersProps {
+  requests: ServiceRequest[];
+  onFilterChange: (filtered: ServiceRequest[]) => void;
+}
+
+export const RequestFilters: React.FC<RequestFiltersProps> = ({ requests, onFilterChange }) => {
+  const [filters, setFilters] = React.useState({
+    status: '',
+    priority: '',
+    type: '',
+    search: ''
+  });
+
+  React.useEffect(() => {
+    let filtered = [...requests];
+
+    if (filters.status) {
+      filtered = filtered.filter(r => r.status === filters.status);
+    }
+    if (filters.priority) {
+      filtered = filtered.filter(r => r.priority === filters.priority);
+    }
+    if (filters.type) {
+      filtered = filtered.filter(r => r.type === filters.type);
+    }
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(r => 
+        r.title.toLowerCase().includes(searchLower) ||
+        r.boatName.toLowerCase().includes(searchLower) ||
+        r.ownerName.toLowerCase().includes(searchLower)
+      );
+    }
+
+    onFilterChange(filtered);
+  }, [filters, requests]);
+
+  const handleReset = () => {
+    setFilters({
+      status: '',
+      priority: '',
+      type: '',
+      search: ''
+    });
+  };
+
+  return (
+    <div className="bg-white p-4 rounded-lg shadow mb-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
+        <div>
+          <label htmlFor="search" className="block text-sm font-medium text-gray-700">
+            Search
+          </label>
+          <input
+            type="text"
+            id="search"
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            placeholder="Search requests..."
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+            Status
+          </label>
+          <select
+            id="status"
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          >
+            <option value="">All Statuses</option>
+            {REQUEST_STATUSES.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+            Priority
+          </label>
+          <select
+            id="priority"
+            value={filters.priority}
+            onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          >
+            <option value="">All Priorities</option>
+            {PRIORITY_LEVELS.map((priority) => (
+              <option key={priority.value} value={priority.value}>
+                {priority.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+            Type
+          </label>
+          <select
+            id="type"
+            value={filters.type}
+            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          >
+            <option value="">All Types</option>
+            {SERVICE_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-end">
+          <button
+            onClick={handleReset}
+            className="w-full px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// src/components/requests/RequestTimeline.tsx
+
+import React from 'react';
+import { ServiceRequest } from '../../types';
+import { formatDate } from '../../utils/helpers';
+import { CheckCircleIcon, ClockIcon, XCircleIcon } from '@heroicons/react/solid';
+
+interface RequestTimelineProps {
+  request: ServiceRequest;
+}
+
+export const RequestTimeline: React.FC<RequestTimelineProps> = ({ request }) => {
+  const steps = [
+    {
+      name: 'Request Created',
+      status: 'complete',
+      date: request.createdAt
+    },
+    {
+      name: 'Accepted',
+      status: request.status !== 'new' ? 'complete' : 'pending',
+      date: request.status !== 'new' ? request.updatedAt : null
+    },
+    {
+      name: 'Scheduled',
+      status: request.scheduledDate ? 'complete' : 'pending',
+      date: request.scheduledDate
+    },
+    {
+      name: 'In Progress',
+      status: request.status === 'in_progress' || request.status === 'completed' ? 'complete' : 'pending',
+      date: null
+    },
+    {
+      name: 'Completed',
+      status: request.status === 'completed' ? 'complete' : 'pending',
+      date: request.completedDate
+    }
+  ];
+
+  return (
+    <div className="flow-root">
+      <ul className="-my-6">
+        {steps.map((step, stepIdx) => (
+          <li key={step.name}>
+            <div className="relative pb-6">
+              {stepIdx !== steps.length - 1 ? (
+                <span
+                  className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
+                  aria-hidden="true"
+                />
+              ) : null}
+              <div className="relative flex items-start space-x-3">
+                {step.status === 'complete' ? (
+                  <div>
+                    <span className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
+                      <CheckCircleIcon className="h-5 w-5 text-white" aria-hidden="true" />
+                    </span>
+                  </div>
+                ) : step.status === 'current' ? (
+                  <div>
+                    <span className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                      <ClockIcon className="h-5 w-5 text-white" aria-hidden="true" />
+                    </span>
+                  </div>
+                ) : (
+                  <div>
+                    <span className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center ring-8 ring-white">
+                      <span className="h-2.5 w-2.5 rounded-full bg-gray-600" />
+                    </span>
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div>
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-900">{step.name}</span>
+                    </div>
+                    {step.date && (
+                      <p className="mt-0.5 text-sm text-gray-500">
+                        {formatDate(step.date)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};

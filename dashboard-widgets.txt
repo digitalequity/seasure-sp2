@@ -1,0 +1,156 @@
+// src/components/dashboard/RecentActivity.tsx
+
+import React from 'react';
+import { formatRelativeTime } from '../../utils/helpers';
+import { ClockIcon, CheckCircleIcon, UserIcon, PlusIcon } from '@heroicons/react/outline';
+
+interface ActivityItem {
+  id: string;
+  type: 'request_created' | 'request_completed' | 'boat_added' | 'user_joined';
+  title: string;
+  description: string;
+  timestamp: Date;
+  icon: any;
+  iconBackground: string;
+}
+
+export const RecentActivity: React.FC = () => {
+  // In a real app, this would fetch from the database
+  const activities: ActivityItem[] = [
+    {
+      id: '1',
+      type: 'request_completed',
+      title: 'Service request completed',
+      description: 'Engine maintenance for Sea Breeze',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      icon: CheckCircleIcon,
+      iconBackground: 'bg-green-500'
+    },
+    {
+      id: '2',
+      type: 'boat_added',
+      title: 'New boat added',
+      description: '2023 Yamaha 242X added to fleet',
+      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
+      icon: PlusIcon,
+      iconBackground: 'bg-blue-500'
+    },
+    {
+      id: '3',
+      type: 'request_created',
+      title: 'New service request',
+      description: 'Hull inspection for Ocean Dream',
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      icon: ClockIcon,
+      iconBackground: 'bg-yellow-500'
+    }
+  ];
+
+  return (
+    <div className="bg-white shadow rounded-lg p-6">
+      <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+      <div className="flow-root">
+        <ul className="-mb-8">
+          {activities.map((activity, idx) => (
+            <li key={activity.id}>
+              <div className="relative pb-8">
+                {idx !== activities.length - 1 ? (
+                  <span
+                    className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
+                    aria-hidden="true"
+                  />
+                ) : null}
+                <div className="relative flex space-x-3">
+                  <div>
+                    <span
+                      className={`${activity.iconBackground} h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white`}
+                    >
+                      <activity.icon className="h-5 w-5 text-white" aria-hidden="true" />
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        {activity.title}{' '}
+                        <span className="font-medium text-gray-900">
+                          {activity.description}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="text-right text-sm whitespace-nowrap text-gray-500">
+                      {formatRelativeTime(activity.timestamp)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+// src/components/dashboard/UpcomingTasks.tsx
+
+import React from 'react';
+import { useRequests } from '../../hooks/useRequests';
+import { formatDate } from '../../utils/helpers';
+import { CalendarIcon, ClockIcon } from '@heroicons/react/outline';
+import { Link } from 'react-router-dom';
+
+export const UpcomingTasks: React.FC = () => {
+  const { getUpcomingRequests } = useRequests();
+  const upcomingTasks = getUpcomingRequests().slice(0, 5);
+
+  return (
+    <div className="bg-white shadow rounded-lg p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-medium text-gray-900">Upcoming Tasks</h3>
+        <CalendarIcon className="h-6 w-6 text-gray-400" />
+      </div>
+      
+      {upcomingTasks.length === 0 ? (
+        <p className="text-gray-500 text-sm">No upcoming tasks</p>
+      ) : (
+        <div className="space-y-3">
+          {upcomingTasks.map((task) => (
+            <Link
+              key={task.id}
+              to={`/requests/${task.id}`}
+              className="block hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg transition-colors"
+            >
+              <div className="flex items-start">
+                <ClockIcon className="flex-shrink-0 h-5 w-5 text-gray-400 mt-0.5" />
+                <div className="ml-3 flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    {task.title}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {task.boatName} • {formatDate(task.scheduledDate!)}
+                  </p>
+                </div>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  task.priority === 'emergency' ? 'bg-red-100 text-red-800' :
+                  task.priority === 'urgent' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {task.priority}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+      
+      <div className="mt-4">
+        <Link
+          to="/requests"
+          className="text-sm font-medium text-blue-600 hover:text-blue-500"
+        >
+          View all tasks →
+        </Link>
+      </div>
+    </div>
+  );
+};

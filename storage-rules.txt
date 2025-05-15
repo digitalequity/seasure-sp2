@@ -1,0 +1,80 @@
+// firebase/storage.rules
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check file size (10MB limit for images, 50MB for documents)
+    function isValidImageSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    function isValidDocumentSize() {
+      return request.resource.size < 50 * 1024 * 1024;
+    }
+    
+    // Helper function to check file type
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isDocument() {
+      return request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('application/.*document.*') ||
+             request.resource.contentType.matches('application/.*sheet.*') ||
+             request.resource.contentType.matches('video/.*');
+    }
+    
+    // Boat images
+    match /boats/{boatId}/images/{imageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isImage() && isValidImageSize();
+      allow update: if isAuthenticated() && isImage() && isValidImageSize();
+      allow delete: if isAuthenticated();
+    }
+    
+    // Knowledge base documents
+    match /knowledge/{category}/{documentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isDocument() && isValidDocumentSize();
+      allow update: if isAuthenticated() && isDocument() && isValidDocumentSize();
+      allow delete: if isAuthenticated();
+    }
+    
+    // Chat attachments
+    match /chat/{chatRoomId}/attachments/{attachmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidDocumentSize();
+      allow update: if false; // Attachments should not be updated
+      allow delete: if isAuthenticated();
+    }
+    
+    // Service request attachments
+    match /requests/{requestId}/attachments/{attachmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidDocumentSize();
+      allow update: if false; // Attachments should not be updated
+      allow delete: if isAuthenticated();
+    }
+    
+    // Profile images
+    match /profiles/{userId}/avatar/{imageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId && isImage() && isValidImageSize();
+      allow update: if isAuthenticated() && request.auth.uid == userId && isImage() && isValidImageSize();
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Invoice PDFs
+    match /invoices/{invoiceId}/pdf/{pdfId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.contentType == 'application/pdf';
+      allow update: if false; // PDFs should not be updated
+      allow delete: if isAuthenticated();
+    }
+  }
+}
